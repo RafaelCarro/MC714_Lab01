@@ -32,6 +32,6 @@ class Server():
         """
         with self.resource.request() as req:
             yield req
-            print(f"Server {self.name}: Started processing request {request_id} at {self.env.now}. Capacity [{self.resource.count}/{self.resource.capacity}]")
+            print(f"{self.env.now:.3f} - Server {self.name}: Started processing request {request_id}. Capacity [{self.resource.count}/{self.resource.capacity}] - Queue [{len(self.resource.queue)}]")
             yield self.env.timeout(self.process_time)
-            print(f"Server {self.name}: Finished processing request {request_id} at {self.env.now}. Capacity [{self.resource.count}/{self.resource.capacity}]")
+            print(f"{self.env.now:.3f} - Server {self.name}: Finished processing request {request_id}. Capacity [{self.resource.count}/{self.resource.capacity}] - Queue [{len(self.resource.queue)}]")

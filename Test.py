@@ -1,12 +1,15 @@
 from Server import Server
+from LoadBalancer import LoadBalancer, Strategy
 import simpy
 
 # Test file, remove before submitting
 def main():
     env = simpy.Environment()
-    server_1 = Server(env, '1', 15, 0.05)
-    for i in range(1, 22):
-        env.process(server_1.run_request(i))
+    servers = [Server(env, str(i), 15, 0.05) for i in range(3)]
+    LB = LoadBalancer(env, servers, Strategy.SHORTEST_QUEUE, 0.0001)
+
+    for i in range(1, 120):
+        env.process(LB.route_request(i))
     env.run()
 
 main()
