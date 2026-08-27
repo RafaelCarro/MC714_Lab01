@@ -15,6 +15,24 @@ def startTest(
         arrival_time_lambda: float = 0.6,
         simulation_time_limit: float = 5000.0,
         random_seed: int = 42):
+    """ Run a complete server and Load Balancer simulation with the given configuration.
+
+        Args:
+            number_of_servers (int): Number of servers available to process requests.
+            server_process_time_lambda (float): λ coefficient used to determine the
+                server request processing time.
+            server_capacity (int): Maximum number of requests that each server can
+                process simultaneously.
+            load_balancer_strategy (Strategy): Strategy used by the Load Balancer to
+                select a server for each incoming request.
+            load_balancer_proccess_time (float): Time required by the Load Balancer
+                to process and forward a request.
+            arrival_time_lambda (float): λ coefficient used to determine the time
+                between request arrivals.
+            simulation_time_limit (float): Maximum simulation time for the test.
+            random_seed (int): Seed used to initialize the random number generator
+                for reproducible simulation results.
+    """
     random.seed(random_seed)
     
     env = simpy.Environment()
