@@ -11,7 +11,7 @@ class Strategy(Enum):
     SHORTEST_QUEUE = "shortest_queue"
 
 class LoadBalancer():
-    def __init__(self, env: simpy.Environment, servers: list[Server], strategy: Strategy, process_time: int = 0.01, random_seed: int = 42):
+    def __init__(self, env: simpy.Environment, servers: list[Server], strategy: Strategy, process_time: int = 0.00, random_seed: int = 42):
         """ A class that represent our load balancer.
 
         Attributes:
@@ -28,7 +28,6 @@ class LoadBalancer():
         self.process_time = process_time
 
         self.num_servers = len(servers)
-        self.resource = simpy.Resource(env, capacity=1)
         self.total_requests = 0
 
     def route_request(self, request_id):
@@ -39,13 +38,9 @@ class LoadBalancer():
         Args:
             request_id (int): Id to identificate different request in the network.
         """
-        with self.resource.request() as req:
-            yield req
-            dest_server = self.server_router()
-            yield self.env.timeout(self.process_time)
-
-            self.env.process(dest_server.run_request(request_id))
-            print(f"{self.env.now:.3f} - ROUTER: Sent request {request_id} to Server {dest_server.name}")
+        dest_server = self.server_router()
+        self.env.process(dest_server.run_request(request_id))
+        print(f"{self.env.now:.3f} - ROUTER: Sent request {request_id} to Server {dest_server.name}")
             
 
     def server_router(self) -> Server:
