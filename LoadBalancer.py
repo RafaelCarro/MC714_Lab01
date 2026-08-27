@@ -4,7 +4,6 @@ import simpy
 from Server import Server
 from enum import Enum
 
-
 class Strategy(Enum):
     RANDOM = "random"
     ROUND_ROBIN = "round_robin"
@@ -41,11 +40,10 @@ class LoadBalancer():
         dest_server = self.server_router()
         self.env.process(dest_server.run_request(request_id))
         print(f"{self.env.now:.3f} - ROUTER: Sent request {request_id} to Server {dest_server.name}")
-            
 
     def server_router(self) -> Server:
         """ Gets the next server to be routed following LoadBalancer Strategy.
-        
+
         Possible strategies:
             - RANDOM: Returns a random server
             - ROUND_ROBIN: Cycles sequentially between servers
@@ -68,7 +66,6 @@ class LoadBalancer():
             dest_server = self._get_min_queue_server()
             self.total_requests += 1
             return dest_server
-                
 
     def _get_min_queue_server(self):
         min_server = self.servers[0]
