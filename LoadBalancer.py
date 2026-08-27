@@ -10,7 +10,7 @@ class Strategy(Enum):
     SHORTEST_QUEUE = "shortest_queue"
 
 class LoadBalancer():
-    def __init__(self, env: simpy.Environment, servers: list[Server], strategy: Strategy, process_time: int = 0.00, random_seed: int = 42):
+    def __init__(self, env: simpy.Environment, servers: list[Server], strategy: Strategy, process_time: int = 0.00):
         """ A class that represent our load balancer.
 
         Attributes:
@@ -18,7 +18,6 @@ class LoadBalancer():
             servers (List[Server]): Instances of servers that the LoadBalancer can allocate requests.
             strategy (Strategy): Strategy used to balance requests between servers.
             process_time (int): Time eeded to route a request. 
-            random_seed (int): Random seed used
         """
 
         self.env = env
