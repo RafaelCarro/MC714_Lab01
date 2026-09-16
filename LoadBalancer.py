@@ -3,6 +3,7 @@ import simpy
 
 from Server import Server
 from enum import Enum
+from Metrics import SimulationMetrics
 
 class Strategy(Enum):
     RANDOM = "random"
@@ -10,7 +11,7 @@ class Strategy(Enum):
     SHORTEST_QUEUE = "shortest_queue"
 
 class LoadBalancer():
-    def __init__(self, env: simpy.Environment, servers: list[Server], strategy: Strategy, process_time: int = 0.00):
+    def __init__(self, env: simpy.Environment, servers: list[Server], strategy: Strategy, metrics: SimulationMetrics, process_time: int = 0.00):
         """ A class that represent our load balancer.
 
         Attributes:
@@ -27,6 +28,7 @@ class LoadBalancer():
 
         self.num_servers = len(servers)
         self.total_requests = 0
+        self.metrics = metrics
 
     def route_request(self, request_id):
         """ Routes a request to a server by Strategy criteria.
@@ -37,8 +39,9 @@ class LoadBalancer():
             request_id (int): Id to identificate different request in the network.
         """
         dest_server = self.server_router()
+        self.metrics.log_request_server(request_id, dest_server.name)
         self.env.process(dest_server.run_request(request_id))
-        print(f"{self.env.now:.3f} - ROUTER: Sent request {request_id} to Server {dest_server.name}")
+        # print(f"{self.env.now:.3f} - ROUTER: Sent request {request_id} to Server {dest_server.name}")
 
     def server_router(self) -> Server:
         """ Gets the next server to be routed following LoadBalancer Strategy.

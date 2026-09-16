@@ -5,7 +5,7 @@ import Utils
 
 from LoadBalancer import LoadBalancer, Strategy
 from Server import Server
-
+from Metrics import SimulationMetrics
 def startTest(
         number_of_servers: int = 3,
         server_process_time_lambda: float = 1.0,
@@ -14,6 +14,7 @@ def startTest(
         load_balancer_proccess_time: float = 0.0,
         arrival_time_lambda: float = 0.6,
         simulation_time_limit: float = 5000.0,
+        warmup_time: float = 500.0,
         random_seed: int = 42):
     """ Run a complete server and Load Balancer simulation with the given configuration.
 
@@ -36,10 +37,11 @@ def startTest(
     random.seed(random_seed)
     
     env = simpy.Environment()
-    servers = [Server(env, str(i), server_capacity, server_process_time_lambda) for i in range(number_of_servers)]
-    LB = LoadBalancer(env, servers, load_balancer_strategy, load_balancer_proccess_time)
+    metrics = SimulationMetrics(number_of_servers, simulation_time_limit)
+    servers = [Server(env, str(i), metrics, server_capacity, server_process_time_lambda, ) for i in range(number_of_servers)]
+    LB = LoadBalancer(env, servers, load_balancer_strategy, metrics, load_balancer_proccess_time, )
 
-    env.process(Utils.request_generator(env, LB, arrival_time_lambda))
+    env.process(Utils.request_generator(env, LB, metrics, arrival_time_lambda))
 
     print("Starting test with following parameters:\n" \
         f"number of servers: {number_of_servers}\n" \
@@ -54,3 +56,5 @@ def startTest(
     env.run(until=simulation_time_limit)
 
     print("\nFinishing test\n")
+
+    return metrics

@@ -1,9 +1,11 @@
 import random
 import simpy
+import matplotlib.pyplot as plt
 
 from LoadBalancer import LoadBalancer
+from Metrics import SimulationMetrics
 
-def request_generator(env: simpy.Environment, load_balancer: LoadBalancer, arrival_time_lambda: float = 0.6):
+def request_generator(env: simpy.Environment, load_balancer: LoadBalancer, metrics: SimulationMetrics, arrival_time_lambda: float = 0.6,):
     """ Generate requests to send to Load Balancer following a Poisson distribution, commanded by the arrival_time_lambda.
 
     Args:
@@ -18,5 +20,6 @@ def request_generator(env: simpy.Environment, load_balancer: LoadBalancer, arriv
 
         yield env.timeout(interarrival_time)
 
+        metrics.log_request_arrival(request_id, env.now)
         load_balancer.route_request(request_id)
         request_id += 1
