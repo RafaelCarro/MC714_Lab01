@@ -37,7 +37,12 @@ def startTest(
     random.seed(random_seed)
     
     env = simpy.Environment()
-    metrics = SimulationMetrics(number_of_servers, simulation_time_limit)
+    metrics = SimulationMetrics(
+        number_of_servers,
+        simulation_time_limit,
+        strategy=load_balancer_strategy,
+        arrival_lambda=arrival_time_lambda,
+    )
     servers = [Server(env, str(i), metrics, server_capacity, server_process_time_lambda, ) for i in range(number_of_servers)]
     LB = LoadBalancer(env, servers, load_balancer_strategy, metrics, load_balancer_proccess_time, )
 
