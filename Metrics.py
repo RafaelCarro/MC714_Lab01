@@ -7,8 +7,11 @@ import matplotlib.pyplot as plt
 
 
 class SimulationMetrics:
+    """Collect request events and calculate simulation performance metrics."""
+
     def __init__(self, number_of_servers, simulation_time_limit,
                  strategy=None, arrival_lambda=None):
+        """Initialize metric collection for one simulation configuration."""
         self.number_of_servers = number_of_servers
         self.simulation_time_limit = simulation_time_limit
         self.strategy = strategy
@@ -16,6 +19,7 @@ class SimulationMetrics:
         self.requests_logs = {}
 
     def log_request_arrival(self, request_id, arrival_time):
+        """Create a log entry when a request enters the system."""
         self.requests_logs[request_id] = {
             "arrival_time": arrival_time,
             "start_time": None,
@@ -24,15 +28,19 @@ class SimulationMetrics:
         }
 
     def log_request_server(self, request_id, server_name):
+        """Record the server selected to process a request."""
         self.requests_logs[request_id]["server_name"] = server_name
 
     def log_request_start(self, request_id, start_time):
+        """Record when a server starts processing a request."""
         self.requests_logs[request_id]["start_time"] = start_time
 
     def log_request_end(self, request_id, end_time):
+        """Record when a request finishes processing."""
         self.requests_logs[request_id]["end_time"] = end_time
 
     def calculateMetrics(self, warmup_time):
+        """Calculate throughput, response time, queue size, and utilization."""
 
         time_window = self.simulation_time_limit - warmup_time
 
@@ -42,6 +50,7 @@ class SimulationMetrics:
         total_window_number_requests_time = 0
         server_window_service_time = defaultdict(float)
 
+        # Accumulate request and service times over the measurement window.
         for req, log in self.requests_logs.items():
             arrival = log["arrival_time"]
             start = log["start_time"]
@@ -67,8 +76,8 @@ class SimulationMetrics:
             # Requests arriving during warm-up must not affect request-based
             # metrics, even when they finish after the warm-up period.
             if arrival >= warmup_time and end > warmup_time:
-                finished_requests += 1                  # Used to calculate Throughput
-                total_response_time += (end - arrival)  #Used to calculate E[R]
+                finished_requests += 1
+                total_response_time += (end - arrival)
 
             if start is not None:
                 start = max(start, warmup_time)
@@ -79,6 +88,7 @@ class SimulationMetrics:
                     total_window_service_time += (end - start)
                     server_window_service_time[log["server_name"]] += end - start
 
+        # Convert the accumulated values into averages for the time window.
         throughput = finished_requests / time_window if time_window > 0 else 0
 
         e_response_time = (
@@ -117,10 +127,11 @@ class SimulationMetrics:
 
     @staticmethod
     def aggregate_results(results):
-        """Calculate the mean and 95% confidence interval per configuration."""
+        """Calculate means and 95% confidence intervals per configuration."""
         if not results:
             raise ValueError("At least one simulation result is required")
 
+        # These metrics are aggregated across independent simulation replicas.
         metric_names = [
             "throughput",
             "expected_response_time",
@@ -136,6 +147,7 @@ class SimulationMetrics:
         t_critical = 2.262
         aggregated_results = []
 
+        # Group replicas by strategy and arrival rate before computing statistics.
         for (strategy, arrival_lambda), replicas in sorted(grouped_results.items()):
             aggregated = {
                 "strategy": strategy,
@@ -182,9 +194,10 @@ class SimulationMetrics:
 
     @staticmethod
     def generate_report(results, output_dir="results"):
-        """Save a CSV table and charts for a batch of simulations."""
+        """Save aggregated metrics to CSV and generate comparison charts."""
         aggregated_results = SimulationMetrics.aggregate_results(results)
         os.makedirs(output_dir, exist_ok=True)
+        # Keep the exported metric columns consistent across all configurations.
         metric_names = [
             "throughput",
             "expected_response_time",
@@ -213,12 +226,21 @@ class SimulationMetrics:
             ])
         csv_path = os.path.join(output_dir, "metrics.csv")
 
+        # Write numerical results separately from the analytical reference curve.
         with open(csv_path, "w", newline="", encoding="utf-8") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=columns)
             writer.writeheader()
             writer.writerows(aggregated_results)
 
         strategies = sorted({str(result.get("strategy")) for result in aggregated_results})
+        analytical_random_response_time = {
+            0.6: 1.25,
+            1.2: 1.6667,
+            1.8: 2.5,
+            2.4: 5.0,
+            2.7: 10.0,
+        }
+        # Plot each metric and add confidence intervals for simulated values.
         for metric_name in metric_names:
             figure, axis = plt.subplots(figsize=(9, 6))
             for strategy in strategies:
@@ -245,6 +267,15 @@ class SimulationMetrics:
                     capsize=4,
                     alpha=0.7,
                 )
+            if metric_name == "expected_response_time":
+                # Analytical E[R] for the random strategy is a fixed reference.
+                axis.plot(
+                    list(analytical_random_response_time),
+                    list(analytical_random_response_time.values()),
+                    marker="o",
+                    linestyle="--",
+                    label="modeled random",
+                )
             axis.set_title(metric_name.replace("_", " ").title())
             axis.set_xlabel("Arrival lambda")
             axis.set_ylabel(metric_name.replace("_", " "))
@@ -257,6 +288,7 @@ class SimulationMetrics:
             )
             plt.close(figure)
 
+        # Generate a separate chart for the utilization of each server.
         figure, axis = plt.subplots(figsize=(9, 6))
         for strategy in strategies:
             strategy_results = sorted(

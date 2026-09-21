@@ -5,7 +5,6 @@ from Metrics import SimulationMetrics
 # Change this value to get the lambda = 3.3 results
 RUN_LAMBDA_3_3 = False
 
-# Test file, remove before submitting
 def main():
 
     lambdas = [0.6, 1.2, 1.8, 2.4, 2.7]
